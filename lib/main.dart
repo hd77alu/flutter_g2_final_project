@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'presentation/screens/app_outlook_screen.dart';
 import 'presentation/screens/sign_up_screen.dart';
+import 'presentation/screens/course_completion_screen.dart';
+import 'presentation/screens/mentorship_hub_screen.dart';
+import 'presentation/screens/profile_screen.dart';
+import 'presentation/screens/my_skills_screen.dart';
+import 'presentation/screens/preferences_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -19,10 +24,15 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: '/course-completion',
       routes: {
         '/': (context) => const OutlookScreen(),
         '/signup': (context) => const SignUpScreen(),
+        '/course-completion': (context) => const CourseCompletionScreen(),
+        '/mentorship-hub': (context) => const MentorshipHubScreen(),
+        '/profile': (context) => const ProfileScreen(),
+        '/skills': (context) => const MySkillsScreen(),
+        '/preferences': (context) => const PreferencesScreen(),
       },
     );
   }
