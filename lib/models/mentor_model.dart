@@ -1,4 +1,5 @@
 class Mentor {
+  final String id;
   final String name;
   final String role;
   final double rating;
@@ -7,6 +8,7 @@ class Mentor {
   final bool isOnline;
 
   Mentor({
+    required this.id,
     required this.name,
     required this.role,
     required this.rating,
@@ -15,8 +17,9 @@ class Mentor {
     this.isOnline = false,
   });
 
-  factory Mentor.fromFirestore(Map<String, dynamic> data) {
+  factory Mentor.fromFirestore(String id, Map<String, dynamic> data) {
     return Mentor(
+      id: id,
       name: data['name'] ?? '',
       role: data['role'] ?? '',
       rating: (data['rating'] ?? 0).toDouble(),

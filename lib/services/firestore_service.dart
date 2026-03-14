@@ -8,10 +8,43 @@ class FirestoreService {
 
   Future<List<Mentor>> getMentors() async {
     final snapshot = await _db.collection('mentors').get();
-
     return snapshot.docs
-        .map((doc) => Mentor.fromFirestore(doc.data()))
+        .map((doc) => Mentor.fromFirestore(doc.id, doc.data()))
         .toList();
+  }
+
+  // Bookmark a mentor for the current user
+  Future<void> bookmarkMentor(String mentorId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('bookmarks')
+        .doc(mentorId)
+        .set({'mentorId': mentorId, 'savedAt': DateTime.now().toIso8601String()});
+  }
+
+  Future<void> removeBookmark(String mentorId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('bookmarks')
+        .doc(mentorId)
+        .delete();
+  }
+
+  Future<Set<String>> getBookmarkedMentorIds() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return {};
+    final snapshot = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('bookmarks')
+        .get();
+    return snapshot.docs.map((doc) => doc.id).toSet();
   }
 
   // CRUD operations for Skills

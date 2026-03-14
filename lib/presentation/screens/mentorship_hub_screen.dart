@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'mentor_profile_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'mentor_profile_screen.dart';
 import '../../blocs/mentorship_bloc.dart';
 import '../../services/firestore_service.dart';
 import '../../models/mentor_model.dart';
@@ -23,10 +23,9 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
   @override
   void initState() {
     super.initState();
-    // Auth guard — redirect to sign up if not logged in
+    // Auth guard — redirect unauthenticated users to sign up
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
+      if (FirebaseAuth.instance.currentUser == null) {
         Navigator.pushReplacementNamed(context, '/signup');
       }
     });
@@ -38,7 +37,6 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
     super.dispose();
   }
 
-  // Filter mentors by search text and selected chip
   List<Mentor> _filtered(List<Mentor> mentors) {
     final query = _searchController.text.toLowerCase();
     return mentors.where((m) {
@@ -46,8 +44,8 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
           m.name.toLowerCase().contains(query) ||
           m.role.toLowerCase().contains(query);
       final matchesFilter = _selectedFilter == 'All' ||
-          m.tags.any((t) =>
-              t.toLowerCase().contains(_selectedFilter.toLowerCase()));
+          m.tags.any(
+              (t) => t.toLowerCase().contains(_selectedFilter.toLowerCase()));
       return matchesSearch && matchesFilter;
     }).toList();
   }
@@ -60,16 +58,9 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
         backgroundColor: const Color(0xFFF5F5F5),
         body: Column(
           children: [
-            // ── Teal header ──
             _buildHeader(context),
-
-            // ── Search bar ──
             _buildSearchBar(),
-
-            // ── Filter chips ──
             _buildFilterChips(),
-
-            // ── Mentor list ──
             Expanded(child: _buildMentorList()),
           ],
         ),
@@ -77,15 +68,15 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
     );
   }
 
-  // Top teal header with back arrow, title, profile icon
+  // Teal header with back arrow, title, profile icon
   Widget _buildHeader(BuildContext context) {
     return Container(
       color: _teal,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 10,
-        bottom: 14,
-        left: 8,
-        right: 8,
+        top: MediaQuery.of(context).padding.top + 8,
+        bottom: 12,
+        left: 4,
+        right: 4,
       ),
       child: Row(
         children: [
@@ -94,14 +85,25 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
             onPressed: () => Navigator.maybePop(context),
           ),
           const Expanded(
-            child: Text(
-              'Mentorship Hub',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: Colors.black,
-              ),
+            child: Column(
+              children: [
+                Text(
+                  'Inclusive Learning Platform',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
+                ),
+                Text(
+                  'Mentorship Hub',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
             ),
           ),
           IconButton(
@@ -113,7 +115,6 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
     );
   }
 
-  // Search bar
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
@@ -124,6 +125,15 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
           hintText: 'Search mentors by specialty...',
           hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {});
+                  },
+                )
+              : null,
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
@@ -136,7 +146,6 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
     );
   }
 
-  // Filter chips: All, Sign Language, Braille
   Widget _buildFilterChips() {
     return SizedBox(
       height: 44,
@@ -145,12 +154,13 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: _filters.length,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
+        itemBuilder: (context, i) {
           final selected = _filters[i] == _selectedFilter;
           return ChoiceChip(
             label: Text(_filters[i]),
             selected: selected,
-            onSelected: (_) => setState(() => _selectedFilter = _filters[i]),
+            onSelected: (value) =>
+                setState(() => _selectedFilter = _filters[i]),
             selectedColor: _teal,
             backgroundColor: Colors.white,
             labelStyle: TextStyle(
@@ -170,46 +180,50 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
     );
   }
 
-  // BLoC-driven mentor list
   Widget _buildMentorList() {
     return BlocConsumer<MentorshipBloc, MentorshipState>(
       listener: (context, state) {
         if (state is MentorshipError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to load mentors')),
+            const SnackBar(
+              content: Text('Failed to load mentors. Please try again.'),
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       },
       builder: (context, state) {
         if (state is MentorshipLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF00D4D4)),
+          );
         }
 
         if (state is MentorshipLoaded) {
           final mentors = _filtered(state.mentors);
 
           if (mentors.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.people_outline,
-                      size: 64, color: Colors.grey.shade400),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No mentors available yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Check back soon!',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-                  ),
-                ],
+            return _buildEmptyState();
+          }
+
+          // Responsive: grid on wide screens, list on narrow
+          final isWide = MediaQuery.of(context).size.width >= 600;
+
+          if (isWide) {
+            return GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.78,
+              ),
+              itemCount: mentors.length,
+              itemBuilder: (context, index) => _AnimatedMentorCard(
+                mentor: mentors[index],
+                isBookmarked:
+                    state.bookmarkedIds.contains(mentors[index].id),
+                index: index,
               ),
             );
           }
@@ -217,8 +231,11 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
             itemCount: mentors.length,
-            itemBuilder: (context, index) =>
-                _MentorCard(mentor: mentors[index]),
+            itemBuilder: (context, index) => _AnimatedMentorCard(
+              mentor: mentors[index],
+              isBookmarked: state.bookmarkedIds.contains(mentors[index].id),
+              index: index,
+            ),
           );
         }
 
@@ -226,12 +243,103 @@ class _MentorshipHubScreenState extends State<MentorshipHubScreen> {
       },
     );
   }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.people_outline, size: 72, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            'No mentors available yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Check back soon!',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// ── Mentor Card Widget ──
+// Animated card wrapper — slides + fades in staggered
+class _AnimatedMentorCard extends StatefulWidget {
+  final Mentor mentor;
+  final bool isBookmarked;
+  final int index;
+
+  const _AnimatedMentorCard({
+    required this.mentor,
+    required this.isBookmarked,
+    required this.index,
+  });
+
+  @override
+  State<_AnimatedMentorCard> createState() => _AnimatedMentorCardState();
+}
+
+class _AnimatedMentorCardState extends State<_AnimatedMentorCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<Offset> _slideAnim;
+  late final Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
+    _fadeAnim = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
+
+    // Stagger by index
+    Future.delayed(Duration(milliseconds: widget.index * 80), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: SlideTransition(
+        position: _slideAnim,
+        child: _MentorCard(
+          mentor: widget.mentor,
+          isBookmarked: widget.isBookmarked,
+        ),
+      ),
+    );
+  }
+}
+
+// Mentor card
 class _MentorCard extends StatelessWidget {
   final Mentor mentor;
-  const _MentorCard({required this.mentor});
+  final bool isBookmarked;
+
+  const _MentorCard({required this.mentor, required this.isBookmarked});
 
   static const Color _teal = Color(0xFF00D4D4);
 
@@ -252,10 +360,9 @@ class _MentorCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Profile image area with ONLINE badge
+            // Avatar banner with ONLINE badge
             Stack(
               children: [
-                // Avatar banner
                 Container(
                   height: 100,
                   width: double.infinity,
@@ -269,12 +376,11 @@ class _MentorCard extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 36,
                       backgroundColor: Color(0xFF00D4D4),
-                      child: Icon(Icons.person, size: 40, color: Colors.white),
+                      child:
+                          Icon(Icons.person, size: 40, color: Colors.white),
                     ),
                   ),
                 ),
-
-                // ONLINE NOW badge
                 if (mentor.isOnline)
                   Positioned(
                     top: 10,
@@ -306,7 +412,6 @@ class _MentorCard extends StatelessWidget {
               ],
             ),
 
-            // Card body
             Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -316,11 +421,14 @@ class _MentorCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        mentor.name,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
+                      Expanded(
+                        child: Text(
+                          mentor.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                       Text(
@@ -332,7 +440,6 @@ class _MentorCard extends StatelessWidget {
 
                   const SizedBox(height: 4),
 
-                  // Role/title
                   Text(
                     mentor.role,
                     style: TextStyle(
@@ -341,7 +448,6 @@ class _MentorCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Description
                   if (mentor.description.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
@@ -356,11 +462,11 @@ class _MentorCard extends StatelessWidget {
                     ),
                   ],
 
-                  // Tags
                   if (mentor.tags.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 6,
+                      runSpacing: 4,
                       children: mentor.tags
                           .map(
                             (tag) => Chip(
@@ -369,8 +475,7 @@ class _MentorCard extends StatelessWidget {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
                               ),
-                              backgroundColor:
-                                  _teal.withValues(alpha: 0.12),
+                              backgroundColor: _teal.withValues(alpha: 0.12),
                               padding: EdgeInsets.zero,
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
@@ -385,16 +490,13 @@ class _MentorCard extends StatelessWidget {
                   const Divider(height: 1),
                   const SizedBox(height: 6),
 
-                  // Action buttons: Bookmark, Call, Video
+                  // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _actionButton(
-                        context: context,
-                        icon: Icons.bookmark_border,
-                        label: 'Save',
-                        onTap: () {},
-                      ),
+                      // Bookmark — connected to BLoC
+                      _BookmarkButton(
+                          mentor: mentor, isBookmarked: isBookmarked),
                       _actionButton(
                         context: context,
                         icon: Icons.call,
@@ -402,8 +504,7 @@ class _MentorCard extends StatelessWidget {
                         onTap: () => _confirmAction(
                           context,
                           title: 'Call Mentor',
-                          message:
-                              'Do you want to call ${mentor.name}?',
+                          message: 'Do you want to call ${mentor.name}?',
                         ),
                       ),
                       _actionButton(
@@ -436,15 +537,31 @@ class _MentorCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(title),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$title request sent!'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _teal,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+            ),
             child: const Text('Confirm'),
           ),
         ],
@@ -462,17 +579,76 @@ class _MentorCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: _teal.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: _teal),
+            Icon(icon, size: 15, color: _teal),
             const SizedBox(width: 4),
             Text(
               label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF00D4D4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Bookmark button — reads and writes to BLoC
+class _BookmarkButton extends StatelessWidget {
+  final Mentor mentor;
+  final bool isBookmarked;
+
+  const _BookmarkButton({required this.mentor, required this.isBookmarked});
+
+  static const Color _teal = Color(0xFF00D4D4);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        context.read<MentorshipBloc>().add(
+              ToggleBookmark(mentor.id, isCurrentlyBookmarked: isBookmarked),
+            );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isBookmarked ? 'Bookmark removed' : 'Mentor saved!',
+            ),
+            duration: const Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isBookmarked
+              ? _teal.withValues(alpha: 0.25)
+              : _teal.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              size: 15,
+              color: _teal,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              isBookmarked ? 'Saved' : 'Save',
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
