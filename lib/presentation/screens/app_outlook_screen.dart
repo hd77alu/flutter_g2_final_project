@@ -88,7 +88,14 @@ class _OutlookScreenState extends State<OutlookScreen>
                         SizedBox(height: isLarge ? 22 : 14),
                         _IconGrid(isLarge: isLarge),
                         SizedBox(height: isLarge ? 22 : 14),
-                        _StartButton(teal: teal),
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) {
+                            if (state is AuthAuthenticated) {
+                              return const SizedBox.shrink();
+                            }
+                            return _StartButton(teal: teal);
+                          },
+                        ),
                         SizedBox(height: isLarge ? 28 : 20),
                       ],
                     ),
