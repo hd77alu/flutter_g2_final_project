@@ -4,13 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'blocs/auth_bloc.dart';
 
-// ── Jongkuch's screens (auth + outlook) ──────────────────────────────────────
+// ── Jongkuch: App Outlook + Auth screens ─────────────────────────────────────
 import 'presentation/screens/app_outlook_screen.dart';
 import 'presentation/screens/sign_up_screen.dart';
 import 'presentation/screens/forgot_password_screen.dart';
 import 'presentation/screens/verify_email_screen.dart';
 
-// ── Other team members' screens (added here when branches are merged) ─────────
+// ── Other team members' screens (uncomment after merging their branches) ──────
 // import 'presentation/screens/course_completion_screen.dart';
 // import 'presentation/screens/mentorship_hub_screen.dart';
 // import 'presentation/screens/profile_screen.dart';
@@ -30,7 +30,6 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // AuthBloc is provided at the root so every screen can access it.
     return BlocProvider<AuthBloc>(
       create: (_) => AuthBloc()..add(AuthCheckRequested()),
       child: MaterialApp(
@@ -42,17 +41,16 @@ class MainApp extends StatelessWidget {
         ),
         initialRoute: '/',
         routes: {
-          // '/' uses _AuthGate which checks persisted auth state and routes
-          // the user to the correct screen automatically.
+          // _AuthGate checks persisted auth state and routes automatically.
           '/': (context) => const _AuthGate(),
 
-          // ── Jongkuch: App Outlook + Auth screens ──────────────────────────
+          // ── Jongkuch: App Outlook + Auth ──────────────────────────────────
           '/outlook': (context) => const OutlookScreen(),
           '/signup': (context) => const SignUpScreen(),
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/verify-email': (context) => const VerifyEmailScreen(),
 
-          // ── Other team members' routes (uncomment when merging) ───────────
+          // ── Other team members' routes (uncomment after merging) ─────────
           // '/course-completion': (context) => const CourseCompletionScreen(),
           // '/mentorship-hub':    (context) => const MentorshipHubScreen(),
           // '/profile':           (context) => const ProfileScreen(),
@@ -67,8 +65,7 @@ class MainApp extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  _AuthGate — single source of truth for auth-based navigation.
-//  Replaces the old hard-coded '/' → OutlookScreen mapping.
+//  _AuthGate — single source of truth for auth-based routing on app start.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AuthGate extends StatelessWidget {
@@ -76,22 +73,20 @@ class _AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthAuthenticated) {
-          Navigator.pushReplacementNamed(context, '/outlook');
-        } else if (state is AuthEmailVerificationRequired ||
-            state is AuthEmailVerificationSent) {
-          Navigator.pushReplacementNamed(context, '/verify-email');
-        }
-      },
+    return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        // Show the Outlook landing screen for unauthenticated / error states.
-        if (state is AuthUnauthenticated || state is AuthError) {
+        if (state is AuthInitial || state is AuthLoading) {
+          return const _SplashScreen();
+        }
+        if (state is AuthAuthenticated) {
           return const OutlookScreen();
         }
-        // Show a splash while we resolve the persisted session.
-        return const _SplashScreen();
+        if (state is AuthEmailVerificationRequired ||
+            state is AuthEmailVerificationSent) {
+          return const VerifyEmailScreen();
+        }
+        // AuthUnauthenticated, AuthError — show the landing screen.
+        return const OutlookScreen();
       },
     );
   }
