@@ -50,7 +50,10 @@ class _SignUpScreenState extends State<SignUpScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this)
+      ..addListener(() {
+        if (mounted) setState(() {});
+      });
   }
 
   @override
@@ -255,87 +258,77 @@ class _SignUpScreenState extends State<SignUpScreen>
                         ),
                         const SizedBox(height: 20),
 
-                        // Tab content
-                        SizedBox(
-                          // Fixed height so the column doesn't rely on
-                          // TabBarView's intrinsic size.
-                          height: _tabController.index == 0 ? 220 : 340,
-                          child: TabBarView(
-                            controller: _tabController,
-                            children: [
-                              // ── Sign In ──
-                              _SignInForm(
-                                emailCtrl: _siEmailCtrl,
-                                passwordCtrl: _siPasswordCtrl,
-                                emailErr: _siEmailErr,
-                                passwordErr: _siPasswordErr,
-                                passwordVisible: _siPasswordVisible,
-                                teal: teal,
-                                onEmailChanged: (_) {
-                                  if (_siEmailErr != null) {
-                                    setState(() => _siEmailErr = null);
-                                  }
-                                },
-                                onPasswordChanged: (_) {
-                                  if (_siPasswordErr != null) {
-                                    setState(() => _siPasswordErr = null);
-                                  }
-                                },
-                                onTogglePassword: () => setState(
-                                  () => _siPasswordVisible =
-                                      !_siPasswordVisible,
-                                ),
-                                onForgotPassword: () =>
-                                    Navigator.pushNamed(context, '/forgot-password'),
-                                onSignIn: isLoading ? null : _handleSignIn,
-                              ),
-
-                              // ── Sign Up ──
-                              _SignUpForm(
-                                nameCtrl: _suNameCtrl,
-                                emailCtrl: _suEmailCtrl,
-                                passwordCtrl: _suPasswordCtrl,
-                                confirmCtrl: _suConfirmCtrl,
-                                nameErr: _suNameErr,
-                                emailErr: _suEmailErr,
-                                passwordErr: _suPasswordErr,
-                                confirmErr: _suConfirmErr,
-                                passwordVisible: _suPasswordVisible,
-                                confirmVisible: _suConfirmVisible,
-                                teal: teal,
-                                onNameChanged: (_) {
-                                  if (_suNameErr != null) {
-                                    setState(() => _suNameErr = null);
-                                  }
-                                },
-                                onEmailChanged: (_) {
-                                  if (_suEmailErr != null) {
-                                    setState(() => _suEmailErr = null);
-                                  }
-                                },
-                                onPasswordChanged: (_) {
-                                  if (_suPasswordErr != null) {
-                                    setState(() => _suPasswordErr = null);
-                                  }
-                                },
-                                onConfirmChanged: (_) {
-                                  if (_suConfirmErr != null) {
-                                    setState(() => _suConfirmErr = null);
-                                  }
-                                },
-                                onTogglePassword: () => setState(
-                                  () => _suPasswordVisible =
-                                      !_suPasswordVisible,
-                                ),
-                                onToggleConfirm: () => setState(
-                                  () => _suConfirmVisible =
-                                      !_suConfirmVisible,
-                                ),
-                                onSignUp: isLoading ? null : _handleSignUp,
-                              ),
-                            ],
+                        // Tab content — IndexedStack sizes to actual content,
+                        // no fixed height needed (avoids overflow).
+                        if (_tabController.index == 0)
+                          _SignInForm(
+                            emailCtrl: _siEmailCtrl,
+                            passwordCtrl: _siPasswordCtrl,
+                            emailErr: _siEmailErr,
+                            passwordErr: _siPasswordErr,
+                            passwordVisible: _siPasswordVisible,
+                            teal: teal,
+                            onEmailChanged: (_) {
+                              if (_siEmailErr != null) {
+                                setState(() => _siEmailErr = null);
+                              }
+                            },
+                            onPasswordChanged: (_) {
+                              if (_siPasswordErr != null) {
+                                setState(() => _siPasswordErr = null);
+                              }
+                            },
+                            onTogglePassword: () => setState(
+                              () =>
+                                  _siPasswordVisible = !_siPasswordVisible,
+                            ),
+                            onForgotPassword: () => Navigator.pushNamed(
+                                context, '/forgot-password'),
+                            onSignIn: isLoading ? null : _handleSignIn,
+                          )
+                        else
+                          _SignUpForm(
+                            nameCtrl: _suNameCtrl,
+                            emailCtrl: _suEmailCtrl,
+                            passwordCtrl: _suPasswordCtrl,
+                            confirmCtrl: _suConfirmCtrl,
+                            nameErr: _suNameErr,
+                            emailErr: _suEmailErr,
+                            passwordErr: _suPasswordErr,
+                            confirmErr: _suConfirmErr,
+                            passwordVisible: _suPasswordVisible,
+                            confirmVisible: _suConfirmVisible,
+                            teal: teal,
+                            onNameChanged: (_) {
+                              if (_suNameErr != null) {
+                                setState(() => _suNameErr = null);
+                              }
+                            },
+                            onEmailChanged: (_) {
+                              if (_suEmailErr != null) {
+                                setState(() => _suEmailErr = null);
+                              }
+                            },
+                            onPasswordChanged: (_) {
+                              if (_suPasswordErr != null) {
+                                setState(() => _suPasswordErr = null);
+                              }
+                            },
+                            onConfirmChanged: (_) {
+                              if (_suConfirmErr != null) {
+                                setState(() => _suConfirmErr = null);
+                              }
+                            },
+                            onTogglePassword: () => setState(
+                              () =>
+                                  _suPasswordVisible = !_suPasswordVisible,
+                            ),
+                            onToggleConfirm: () => setState(
+                              () =>
+                                  _suConfirmVisible = !_suConfirmVisible,
+                            ),
+                            onSignUp: isLoading ? null : _handleSignUp,
                           ),
-                        ),
 
                         const SizedBox(height: 8),
 

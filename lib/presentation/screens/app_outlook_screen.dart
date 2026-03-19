@@ -562,7 +562,9 @@ class _GridCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
-          if (route.isNotEmpty) {
+          final isLoggedIn =
+              context.read<AuthBloc>().state is AuthAuthenticated;
+          if (route.isNotEmpty && !isLoggedIn) {
             Navigator.pushNamed(context, route);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
