@@ -10,14 +10,14 @@ import 'presentation/screens/sign_up_screen.dart';
 import 'presentation/screens/forgot_password_screen.dart';
 import 'presentation/screens/verify_email_screen.dart';
 
-// ── Other team members' screens (uncomment after merging their branches) ──────
-// import 'presentation/screens/course_completion_screen.dart';
-// import 'presentation/screens/mentorship_hub_screen.dart';
-// import 'presentation/screens/profile_screen.dart';
-// import 'presentation/screens/my_skills_screen.dart';
-// import 'presentation/screens/preferences_screen.dart';
-// import 'presentation/screens/discover_screen.dart';
-// import 'presentation/screens/accessibility_setup_screen.dart';
+// ── Other team members' screens ───────────────────────────────────────────────
+import 'presentation/screens/course_completion_screen.dart';
+import 'presentation/screens/mentorship_hub_screen.dart';
+import 'presentation/screens/profile_screen.dart';
+import 'presentation/screens/my_skills_screen.dart';
+import 'presentation/screens/preferences_screen.dart';
+import 'presentation/screens/discover_screen.dart';
+import 'presentation/screens/accessibility_setup_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,14 +50,14 @@ class MainApp extends StatelessWidget {
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/verify-email': (context) => const VerifyEmailScreen(),
 
-          // ── Other team members' routes (uncomment after merging) ─────────
-          // '/course-completion': (context) => const CourseCompletionScreen(),
-          // '/mentorship-hub':    (context) => const MentorshipHubScreen(),
-          // '/profile':           (context) => const ProfileScreen(),
-          // '/skills':            (context) => const MySkillsScreen(),
-          // '/preferences':       (context) => const PreferencesScreen(),
-          // '/discover':          (context) => const DiscoverScreen(),
-          // '/accessibility-setup':(context) => const AccessibilitySetupScreen(),
+          // ── Other team members' routes ────────────────────────────────────
+          '/course-completion': (context) => const CourseCompletionScreen(),
+          '/mentorship-hub': (context) => const MentorshipHubScreen(),
+          '/profile': (context) => const ProfileScreen(),
+          '/skills': (context) => const MySkillsScreen(),
+          '/preferences': (context) => const PreferencesScreen(),
+          '/discover': (context) => const DiscoverScreen(),
+          '/accessibility-setup': (context) => const AccessibilitySetupScreen(),
         },
       ),
     );
